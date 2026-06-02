@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dual Script Font Tester</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      overflow-y: scroll;
+      min-height: 100vh;
+      background: #fdfdfd;
+      color: #222;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      font-family: Tahoma, sans-serif;
+      padding-bottom: 260px;
+    }
+
+    body.negative {
+      background: #020202;
+      color: #ddd;
+    }
+
+    .top-buttons {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 100;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 2px solid #bbb;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      background: #fdfdfd;
+      color: #222;
+      flex-shrink: 0;
+    }
+    .icon-btn:hover { border-color: #555; }
+
+    body.negative .icon-btn {
+      background: #020202;
+      color: #ddd;
+      border-color: #666;
+    }
+    body.negative .icon-btn:hover { border-color: #aaa; }
+
+    .help-wrapper { position: relative; }
+
+    .help-tooltip {
+      display: none;
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 0;
+      width: 280px;
+      background: #fff;
+      color: #222;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: .82rem;
+      line-height: 1.6;
+      box-shadow: 0 4px 16px #0002;
+      text-align: left;
+      direction: ltr;
+    }
+    .help-wrapper:hover .help-tooltip { display: block; }
+
+    body.negative .help-tooltip {
+      background: #1a1a1a;
+      color: #ddd;
+      border-color: #444;
+    }
+
+    .text-wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      padding: 64px 24px 48px;
+    }
+
+    #editable {
+      width: 100%;
+      max-width: 95%;
+      min-height: 160px;
+      font-size: 32px;
+      line-height: 1.8;
+      text-align: right;
+      direction: rtl;
+      outline: none;
+      background: transparent;
+      color: inherit;
+      word-break: break-word;
+      caret-color: currentColor;
+    }
+
+    .controls {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      background: #fdfdfd;
+      border-top: 1px solid #e8e8e8;
+      padding: 16px 24px;
+    }
+
+    body.negative .controls {
+      background: #020202;
+      border-top-color: #333;
+    }
+
+    .sliders {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 40px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .slider-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: .88rem;
+    }
+
+    .slider-group label { min-width: 80px; text-align: right; }
+
+    .slider-group input[type=range] {
+      width: 160px;
+      accent-color: #222;
+    }
+    body.negative .slider-group input[type=range] { accent-color: #ccc; }
+
+    .slider-group span {
+      min-width: 40px;
+      font-variant-numeric: tabular-nums;
+      font-size: .85rem;
+    }
+
+    .text-controls {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      font-size: .82rem;
+    }
+
+    .btn-group label {
+      margin-left: 6px;
+      color: #888;
+    }
+
+    .tog-btn {
+      padding: 4px 12px;
+      border-radius: 6px;
+      border: 1.5px solid #ccc;
+      background: #f5f5f5;
+      cursor: pointer;
+      font-size: .82rem;
+      font-family: inherit;
+      color: #333;
+      transition: background .15s, border-color .15s;
+    }
+    .tog-btn.active {
+      background: #222;
+      color: #fff;
+      border-color: #222;
+    }
+
+    body.negative .tog-btn {
+      background: #1a1a1a;
+      color: #aaa;
+      border-color: #444;
+    }
+    body.negative .tog-btn.active {
+      background: #ddd;
+      color: #111;
+      border-color: #ddd;
+    }
+
+    .font-zones {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .drop-zone {
+      flex: 1;
+      min-width: 240px;
+      border-radius: 8px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: opacity .2s;
+      direction: ltr;
+    }
+    .drop-zone:hover { opacity: .85; }
+    .drop-zone.drag-over { opacity: .7; }
+
+    .drop-zone.arabic-zone {
+      background: #f3f0ff;
+      border: 1.5px dashed #7c3aed;
+    }
+    .drop-zone.latin-zone {
+      background: #f0fdf4;
+      border: 1.5px dashed #16a34a;
+    }
+
+    body.negative .drop-zone.arabic-zone {
+      background: #1e1530;
+      border-color: #9b6dff;
+    }
+    body.negative .drop-zone.latin-zone {
+      background: #0f1f14;
+      border-color: #3dba6a;
+    }
+
+    .zone-title {
+      font-size: .88rem;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .arabic-zone .zone-title { color: #6d28d9; }
+    .latin-zone  .zone-title { color: #15803d; }
+
+    body.negative .arabic-zone .zone-title { color: #b08eff; }
+    body.negative .latin-zone  .zone-title { color: #5dd98a; }
+
+    .zone-desc {
+      font-size: .76rem;
+      color: #888;
+      margin-bottom: 8px;
+    }
+    body.negative .zone-desc { color: #777; }
+
+    .zone-input-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .zone-input-row input[type=text] {
+      flex: 1;
+      padding: 5px 9px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      font-size: .76rem;
+      outline: none;
+      direction: ltr;
+      background: #fff;
+      color: #333;
+    }
+    body.negative .zone-input-row input[type=text] {
+      background: #111;
+      color: #ccc;
+      border-color: #444;
+    }
+
+    .zone-input-row button {
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      background: #f5f5f5;
+      font-size: .8rem;
+      cursor: pointer;
+      font-family: inherit;
+      color: #333;
+      white-space: nowrap;
+    }
+    .zone-input-row button:hover { background: #ebebeb; }
+
+    body.negative .zone-input-row button {
+      background: #222;
+      color: #ccc;
+      border-color: #444;
+    }
+    body.negative .zone-input-row button:hover { background: #333; }
+
+    .zone-status {
+      margin-top: 6px;
+      font-size: .76rem;
+      min-height: 14px;
+      color: #888;
+    }
+
+    .file-input { display: none; }
+
+    @media (max-width: 600px) {
+      .sliders { flex-direction: column; align-items: flex-start; }
+      .font-zones { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-buttons">
+  <button class="icon-btn" id="btnNegative" title="Toggle Negative">◑</button>
+  <div class="help-wrapper">
+    <button class="icon-btn" title="Help">?</button>
+    <div class="help-tooltip">
+      Drop or select a font file onto each zone.<br>
+      Or paste a Google Fonts CSS URL and click Apply.<br>
+      Persian/Arabic zone sets the RTL font.<br>
+      Latin zone sets the LTR/Latin font.<br>
+      Both fonts are stacked: Latin first, then Persian.
+    </div>
+  </div>
+</div>
+
+<div class="text-wrapper">
+  <div id="editable" contenteditable="true" spellcheck="false" style="direction: rtl; text-align: right;">هر طرح حروف فونت دارای سبک، وزن، عرض، ایتالیک، قرارگیری در متن و طراحی خاصی است؛ به عنوان مثال "ITC Garamond Bold Condensed Italic" با فونت "ITC Garamond Condensed Italic" و "ITC Garamond Bold Condensed" متفاوت است ولی همهٔ آنها دارای یک طرح حرف مشترک هستند که "ITC Garamond" نامیده می‌شود.</div>
+</div>
+
+<div class="controls">
+  <div class="text-controls">
+    <div class="btn-group">
+      <span style="font-size:.82rem;color:#888">Direction:</span>
+      <button class="tog-btn active" id="btnRTL">RTL</button>
+      <button class="tog-btn"        id="btnLTR">LTR</button>
+    </div>
+    <div class="btn-group">
+      <span style="font-size:.82rem;color:#888">Align:</span>
+      <button class="tog-btn active" id="btnRight">⇤ Right</button>
+      <button class="tog-btn"        id="btnCenter">Center</button>
+      <button class="tog-btn"        id="btnLeft">Left ⇥</button>
+    </div>
+  </div>
+  <div class="sliders">
+    <div class="slider-group">
+      <label>Font Size</label>
+      <input type="range" id="fontSize" min="12" max="200" value="32" />
+      <span id="fontSizeVal">32px</span>
+    </div>
+    <div class="slider-group">
+      <label>Line Height</label>
+      <input type="range" id="lineHeight" min="100" max="300" value="180" />
+      <span id="lineHeightVal">1.80</span>
+    </div>
+  </div>
+
+  <div class="font-zones">
+    <div class="drop-zone arabic-zone" id="zoneArabic">
+      <input type="file" class="file-input" id="fileArabic" accept=".ttf,.otf,.woff,.woff2" />
+      <div class="zone-title">Persian/Arabic Font</div>
+      <p class="zone-desc">Click or drop a font file. Paste a Google Fonts URL below.</p>
+      <div class="zone-input-row">
+        <input type="text" id="urlArabic" placeholder="https://fonts.googleapis.com/css2?family=Vazirmatn&display=swap" />
+        <button id="btnArabic">Apply</button>
+      </div>
+      <div class="zone-status" id="statusArabic">—</div>
+    </div>
+
+    <div class="drop-zone latin-zone" id="zoneLatin">
+      <input type="file" class="file-input" id="fileLatin" accept=".ttf,.otf,.woff,.woff2" />
+      <div class="zone-title">Latin Font</div>
+      <p class="zone-desc">Click or drop a font file. Paste a Google Fonts URL below.</p>
+      <div class="zone-input-row">
+        <input type="text" id="urlLatin" placeholder="https://fonts.googleapis.com/css2?family=Inter&display=swap" />
+        <button id="btnLatin">Apply</button>
+      </div>
+      <div class="zone-status" id="statusLatin">—</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const editable = document.getElementById('editable');
+
+  // ── Negative mode ──────────────────────────────────────────────
+  document.getElementById('btnNegative').addEventListener('click', () => {
+    document.body.classList.toggle('negative');
+  });
+
+  // ── Sliders ────────────────────────────────────────────────────
+  document.getElementById('fontSize').addEventListener('input', function () {
+    editable.style.fontSize = this.value + 'px';
+    document.getElementById('fontSizeVal').textContent = this.value + 'px';
+  });
+
+  document.getElementById('lineHeight').addEventListener('input', function () {
+    const v = (this.value / 100).toFixed(2);
+    editable.style.lineHeight = v;
+    document.getElementById('lineHeightVal').textContent = v;
+  });
+
+  // ── Direction & Align buttons (registered ONCE, outside setupZone) ──
+  function setActive(group, el) {
+    group.forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  const dirBtns   = [document.getElementById('btnRTL'),   document.getElementById('btnLTR')];
+  const alignBtns = [document.getElementById('btnRight'), document.getElementById('btnCenter'), document.getElementById('btnLeft')];
+
+  document.getElementById('btnRTL').addEventListener('click', function () {
+    editable.style.direction = 'rtl';
+    setActive(dirBtns, this);
+  });
+  document.getElementById('btnLTR').addEventListener('click', function () {
+    editable.style.direction = 'ltr';
+    setActive(dirBtns, this);
+  });
+  document.getElementById('btnRight').addEventListener('click', function () {
+    editable.style.textAlign = 'right';
+    setActive(alignBtns, this);
+  });
+  document.getElementById('btnCenter').addEventListener('click', function () {
+    editable.style.textAlign = 'center';
+    setActive(alignBtns, this);
+  });
+  document.getElementById('btnLeft').addEventListener('click', function () {
+    editable.style.textAlign = 'left';
+    setActive(alignBtns, this);
+  });
+
+  // ── Font loading ───────────────────────────────────────────────
+  let arabicFamily = null, latinFamily = null;
+
+  function buildFontStack() {
+    const parts = [];
+    if (latinFamily)  parts.push(`'${latinFamily}'`);
+    if (arabicFamily) parts.push(`'${arabicFamily}'`);
+    parts.push('Tahoma', 'sans-serif');
+    editable.style.fontFamily = parts.join(', ');
+  }
+
+  function loadFontFromFile(file, type) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const name = `custom-${type}-${Date.now()}`;
+      const style = document.createElement('style');
+      style.textContent = `@font-face { font-family: '${name}'; src: url('${e.target.result}'); }`;
+      document.head.appendChild(style);
+      if (type === 'arabic') {
+        arabicFamily = name;
+        document.getElementById('statusArabic').textContent = `✔ ${file.name}`;
+      } else {
+        latinFamily  = name;
+        document.getElementById('statusLatin').textContent  = `✔ ${file.name}`;
+      }
+      buildFontStack();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function loadFontFromUrl(url, type) {
+    const match = url.match(/family=([^&:]+)/);
+    const familyRaw = match ? match[1].replace(/\+/g, ' ').split(':')[0] : null;
+    const statusEl = document.getElementById(type === 'arabic' ? 'statusArabic' : 'statusLatin');
+    if (!familyRaw) { statusEl.textContent = '⚠ Invalid URL'; return; }
+    const old = document.getElementById(`gf-${type}`);
+    if (old) old.remove();
+    const link = document.createElement('link');
+    link.id = `gf-${type}`; link.rel = 'stylesheet'; link.href = url;
+    document.head.appendChild(link);
+    if (type === 'arabic') {
+      arabicFamily = familyRaw;
+    } else {
+      latinFamily  = familyRaw;
+    }
+    statusEl.textContent = `✔ ${familyRaw}`;
+    buildFontStack();
+  }
+
+  // ── Zone setup (file drop + URL apply only) ────────────────────
+  function setupZone(zoneId, fileInputId, urlInputId, btnId, type) {
+    const zone      = document.getElementById(zoneId);
+    const fileInput = document.getElementById(fileInputId);
+    const urlInput  = document.getElementById(urlInputId);
+    const btn       = document.getElementById(btnId);
+
+    zone.addEventListener('click', (e) => {
+      if (e.target === urlInput || e.target === btn) return;
+      fileInput.click();
+    });
+
+    zone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      zone.classList.add('drag-over');
+    });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      if (e.dataTransfer.files[0]) loadFontFromFile(e.dataTransfer.files[0], type);
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files[0]) loadFontFromFile(fileInput.files[0], type);
+    });
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const url = urlInput.value.trim();
+      if (url) loadFontFromUrl(url, type);
+    });
+
+    urlInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const url = urlInput.value.trim();
+        if (url) loadFontFromUrl(url, type);
+      }
+    });
+  }
+
+  setupZone('zoneArabic', 'fileArabic', 'urlArabic', 'btnArabic', 'arabic');
+  setupZone('zoneLatin',  'fileLatin',  'urlLatin',  'btnLatin',  'latin');
+</script>
+</body>
+</html>
