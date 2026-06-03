@@ -13,7 +13,7 @@ A single-file browser tool for testing Persian/Arabic and Latin fonts — no bui
 ## Usage
 
 1.Open index.html in any modern browser
-2.Load fonts into one or both zones
+2.Load fonts into one or both zones(each font should only have the selected script codepoints)
 3.Edit the sample text and adjust controls
 
 No npm, no bundler. Internet only needed for Google Fonts URLs.
